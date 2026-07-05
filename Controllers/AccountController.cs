@@ -1,22 +1,25 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using AhvaPrueba.Data;
+using AhvaPrueba.Models.ViewModels;
+using AhvaPrueba.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using AhvaPrueba.Data;
-using AhvaPrueba.Models.ViewModels;
 
 namespace AhvaPrueba.Controllers
 {
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
         private const int MAX_INTENTOS = 5;
         private const int MINUTOS_BLOQUEO = 15;
 
-        public AccountController(ApplicationDbContext context)
+        public AccountController(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -71,6 +74,10 @@ namespace AhvaPrueba.Controllers
                 {
                     usuario.FechaBloqueo = DateTime.Now;
                     await _context.SaveChangesAsync();
+
+                    //Envía el email
+                    await _emailService.EnviarNotificacionBloqueoAsync(usuario.CorreoPrincipal, usuario.Username);
+
                     return RedirectToAction("Bloqueada");
                 }
 
