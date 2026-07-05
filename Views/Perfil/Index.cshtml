@@ -1,0 +1,164 @@
+﻿@model AhvaPrueba.Models.ViewModels.PerfilViewModel
+@{
+    ViewData["Title"] = "Mi Perfil";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div></div>
+        <form asp-controller="Account" asp-action="Logout" method="post">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar sesión</button>
+        </form>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body d-flex align-items-center gap-4">
+            <img src="@(Model.FotoPerfilUrl ?? "/images/default-profile.png")"
+                 alt="Foto de perfil" class="rounded-circle" style="width:100px; height:100px; object-fit:cover;" />
+            <div>
+                <h4 class="mb-0">@Model.NombreCompleto</h4>
+                <p class="text-muted mb-0">@Model.Titulo</p>
+                <p class="text-muted">@Model.Institucion</p>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="perfilTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#info-basica" type="button">
+                Información Básica
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#responsabilidades" type="button">
+                Responsabilidades
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#historial" type="button">
+                Historial de Responsabilidades
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 p-4 bg-white">
+        <div class="tab-pane fade show active" id="info-basica">
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Nombres:</strong><p>@Model.Nombres</p></div>
+                <div class="col-md-4"><strong>Primer Apellido:</strong><p>@Model.PrimerApellido</p></div>
+                <div class="col-md-4"><strong>Segundo Apellido:</strong><p>@Model.SegundoApellido</p></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Tipo de Documento:</strong><p>@Model.TipoDocumento</p></div>
+                <div class="col-md-4"><strong>Número de Documento:</strong><p>@Model.NumeroDocumento</p></div>
+                <div class="col-md-4"><strong>Fecha de Nacimiento:</strong><p>@Model.FechaNacimiento.ToString("dd/MM/yyyy")</p></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Nacionalidad:</strong><p>@Model.Nacionalidad</p></div>
+                <div class="col-md-4"><strong>Sexo:</strong><p>@Model.Sexo</p></div>
+                <div class="col-md-4"><strong>Correo Electrónico Principal:</strong><p>@Model.CorreoPrincipal</p></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Correo Electrónico Secundario:</strong><p>@(Model.CorreoSecundario ?? "-")</p></div>
+                <div class="col-md-4"><strong>Teléfono Móvil:</strong><p>@Model.TelefonoMovil</p></div>
+                <div class="col-md-4"><strong>Teléfono Secundario:</strong><p>@(Model.TelefonoSecundario ?? "-")</p></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Tipo de Contratación:</strong><p>@Model.TipoContratacion</p></div>
+                <div class="col-md-4"><strong>Fecha de Contratación:</strong><p>@Model.FechaContratacion.ToString("dd/MM/yyyy")</p></div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="responsabilidades">
+            <p class="text-muted">Sin contenido definido para esta prueba técnica.</p>
+        </div>
+
+        <div class="tab-pane fade" id="historial">
+            <p class="text-muted">Sin contenido definido para esta prueba técnica.</p>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalSesionExpira" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Su sesión está a punto de expirar</h5>
+            </div>
+            <div class="modal-body">
+                Por seguridad, su sesión expirará en <strong><span id="contadorSegundos">60</span> segundos</strong>.
+                Para continuar, seleccione "Extender sesión".
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnExtenderSesion">Extender sesión</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const MINUTOS_INACTIVIDAD = 20;
+        const SEGUNDOS_AVISO = 60;
+
+        const msAvisoAntes = SEGUNDOS_AVISO * 1000;
+        const msInactividadTotal = MINUTOS_INACTIVIDAD * 60 * 1000;
+        const msHastaAviso = msInactividadTotal - msAvisoAntes;
+
+        let timerAviso, timerExpiracion, intervalCuentaRegresiva;
+        let segundosRestantes = SEGUNDOS_AVISO;
+
+        const modalEl = document.getElementById('modalSesionExpira');
+        const modal = new bootstrap.Modal(modalEl);
+
+        function iniciarTemporizadores() {
+            clearTimeout(timerAviso);
+            clearTimeout(timerExpiracion);
+            clearInterval(intervalCuentaRegresiva);
+
+            timerAviso = setTimeout(mostrarAvisoExpiracion, msHastaAviso);
+        }
+
+        function mostrarAvisoExpiracion() {
+            segundosRestantes = SEGUNDOS_AVISO;
+            document.getElementById('contadorSegundos').textContent = segundosRestantes;
+            modal.show();
+
+            intervalCuentaRegresiva = setInterval(() => {
+                segundosRestantes--;
+                document.getElementById('contadorSegundos').textContent = segundosRestantes;
+                if (segundosRestantes <= 0) {
+                    clearInterval(intervalCuentaRegresiva);
+                }
+            }, 1000);
+
+            timerExpiracion = setTimeout(expirarSesion, msAvisoAntes);
+        }
+
+        async function expirarSesion() {
+            modal.hide();
+            await fetch('/Account/Logout', { method: 'POST' });
+            window.location.href = '/Account/Login?expirada=true';
+        }
+
+        document.getElementById('btnExtenderSesion').addEventListener('click', async () => {
+            await fetch('/Perfil/ExtenderSesion', { method: 'POST' });
+            clearInterval(intervalCuentaRegresiva);
+            clearTimeout(timerExpiracion);
+            modal.hide();
+            iniciarTemporizadores(); // reinicia el ciclo completo
+        });
+
+        ['mousemove', 'keydown', 'click', 'scroll'].forEach(evento => {
+            document.addEventListener(evento, () => {
+                if (!modalEl.classList.contains('show')) {
+                    iniciarTemporizadores();
+                }
+            });
+        });
+
+        iniciarTemporizadores();
+    </script>
+}

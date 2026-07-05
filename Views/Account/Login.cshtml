@@ -1,0 +1,51 @@
+﻿@model AhvaPrueba.Models.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_Layout";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="card shadow p-4" style="width: 100%; max-width: 400px;">
+        <h3 class="text-center mb-4">Iniciar Sesión</h3>
+
+        @if (ViewBag.SesionExpirada == true)
+        {
+            <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                <div class="toast show align-items-center text-bg-warning border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            Su sesión ha expirado debido a inactividad
+                        </div>
+                        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Username" class="form-label"></label>
+                <input asp-for="Username" class="form-control" autofocus />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
